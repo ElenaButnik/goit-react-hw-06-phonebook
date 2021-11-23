@@ -1,109 +1,101 @@
-import { Component } from "react";
+import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import s from "../Forms/Form.module.css";
-import PropTypes from "prop-types";
-import { connect } from "react-redux";
-import { addContact, deleteContact } from "../../redux/contacts/actions";
+import { useDispatch, useSelector } from "react-redux";
+import { addContact } from "../../redux/contacts/actions";
+import { getContacts } from "../../redux/contacts/selectors";
+export default function Form() {
+  const [userName, setName] = useState("");
+  const [userNumber, setNumber] = useState("");
+  const prodIdName = uuidv4();
+  const prodIdNumber = uuidv4();
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
 
+  // const [contacts, setContacts] = useState(() => {
+  //   return JSON.parse(localStorage.getItem("contacts")) ?? [];
+  // });
 
-export class Form extends Component {
-  state = {
-    name: "",
-    number: "",
+  useEffect(() => {
+    window.localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    switch (name) {
+      case "userName":
+        setName(value);
+        break;
+
+      case "userNumber":
+        setNumber(value);
+        break;
+
+      default:
+        return;
+    }
   };
 
-  handleChange = (e) => {
-    const { name, value } = e.target;
-    // console.log(e.target.name,e.target.value);
-    this.setState({
-      [name]: value,
-    });
-  };
-
-  handleSubmit = (e) => {
-    e.preventDefault();
-    const { name, number } = this.state;
-
-    const obj = {
-      name,
-      number,
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (contacts.find((contact) => contact.name === userName)) {
+      alert(`${userName} is already in contacts`);
+      reset();
+      return;
+    }
+    const newContacts = {
+      name: userName,
+      number: userNumber,
+      id: uuidv4(),
     };
-    this.setState({obj});
-    this.props.addNewContact(obj);
-    this.props.onAdd(obj);
-    this.reset();
+
+    dispatch(addContact(newContacts));
+    reset();
   };
 
-  reset = () => {
-    this.setState({ name: "", number: "" });
+  const reset = () => {
+    setName("");
+    setNumber("");
   };
 
-  prodIdName = uuidv4();
-  prodIdNumber = uuidv4();
+  return (
+    <div>
+      <form className={s.form} onSubmit={handleSubmit}>
+        <label className={s.label} htmlFor={prodIdName}>
+          Name
+        </label>
+        <input
+          className={s.input}
+          id={prodIdName}
+          type="text"
+          name="userName"
+          value={userName}
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
+          required
+          onChange={handleChange}
+        />
 
-  render() {
-    const { handleSubmit, prodIdName, handleChange, prodIdNumber } = this;
-    const { name, number } = this.state;
-    return (
-      <div>
-        <form className={s.form} onSubmit={handleSubmit}>
-          <label className={s.label} htmlFor={prodIdName}>
-            {" "}
-            Name
-          </label>
-          <input
-            className={s.input}
-            id={prodIdName}
-            type="text"
-            name="name"
-            value={name}
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
-            required
-            onChange={handleChange}
-          />
+        <label className={s.label} htmlFor={prodIdNumber}>
+          Number
+        </label>
+        <input
+          className={s.input}
+          id={prodIdNumber}
+          type="tel"
+          name="userNumber"
+          value={userNumber}
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
+          required
+          onChange={handleChange}
+        />
 
-          <label className={s.label} htmlFor={prodIdNumber}>
-            Number
-          </label>
-          <input
-            className={s.input}
-            id={prodIdNumber}
-            type="tel"
-            name="number"
-            value={number}
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
-            required
-            onChange={handleChange}
-          />
-
-          <button className={s.button} type="submit">
-            Add contact
-          </button>
-        </form>
-      </div>
-    );
-  }
+        <button className={s.button} type="submit">
+          Add contact
+        </button>
+      </form>
+    </div>
+  );
 }
-
-Form.propTypes = {
-  handleSubmit: PropTypes.func,
-  handleChange: PropTypes.func,
-  name: PropTypes.string,
-  number: PropTypes.number,
-};
-const mapStateToProps = (state) => {
-  return {
-    contactsList: state.contacts,
-  }
-};
-console.log(mapStateToProps)
-
-const mapDispatchToProps = dispatch => {
-  return {
-    onAdd: obj => dispatch(addContact(obj)),
-  }
-  };
-  
-  export default connect(mapDispatchToProps, mapDispatchToProps)(Form);

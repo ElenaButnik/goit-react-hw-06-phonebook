@@ -1,22 +1,30 @@
-import React from "react";
 import s from "../Filter/Filter.module.css";
-import PropTypes from "prop-types";
+import { useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { filterValue } from "../../redux/contacts/actions";
+import { getFilter } from "../../redux/contacts/selectors";
 
-const Filter = ({ value, changeFilter }) => (
-  <>
-    <label className={s.label}>Find contacts by name</label>
-    <input
-      className={s.input}
-      type="text"
-      value={value}
-      onChange={changeFilter}
-    ></input>
-  </>
-);
+export default function Filter() {
+  const dispatch = useDispatch();
+  const value = useSelector(getFilter);
 
-export default Filter;
+  const changeFilter = useCallback(
+    (e) => {
+      // setFilter(e.currentTarget.value); //сетим локально
+      dispatch(filterValue(e.currentTarget.value)); //отправляем значение в редакс
+    },
+    [dispatch]
+  );
 
-Filter.propTypes = {
-  value: PropTypes.string,
-  changeFilter: PropTypes.func,
-};
+  return (
+    <>
+      <label className={s.label}>Find contacts by name</label>
+      <input
+        className={s.input}
+        type="text"
+        value={value}
+        onChange={changeFilter}
+      ></input>
+    </>
+  );
+}
